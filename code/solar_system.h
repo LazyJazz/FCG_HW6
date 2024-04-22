@@ -16,12 +16,17 @@ struct GlobalUniformObject {
 
 class SolarSystem : public Application {
  public:
+  SolarSystem();
   [[nodiscard]] Model *GetSphereModel() const {
     return sphere_.get();
   }
 
   [[nodiscard]] vulkan::PipelineLayout *EntityPipelineLayout() const {
     return entity_pipeline_layout_.get();
+  }
+
+  [[nodiscard]] FontFactory *GetFontFactory() const {
+    return font_factory_.get();
   }
 
  private:
@@ -41,6 +46,8 @@ class SolarSystem : public Application {
   void DestroyEntities();
   void DestroyFontFactory();
   void DestroyCelestialBodies();
+
+  void KeyCallBack(int key, int scancode, int action, int mods);
 
   std::shared_ptr<vulkan::DescriptorPool> descriptor_pool_;
   std::shared_ptr<vulkan::DescriptorSetLayout> descriptor_set_layout_;
@@ -79,5 +86,11 @@ class SolarSystem : public Application {
 
   std::unique_ptr<FontFactory> font_factory_;
 
+  std::string font_types_[2];
+  int font_select_{0};
   float global_t_{0.0f};
+  float camera_theta_{0.0f};
+  float time_flowing_ratio_{1.0f};
+  bool show_planet_name_{true};
+  bool show_usage_info_{true};
 };

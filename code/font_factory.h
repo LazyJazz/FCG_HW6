@@ -47,6 +47,8 @@ class FontFactory {
                 const glm::vec3 &color,
                 float depth);
 
+  float GetTextWidth(const std::string &text);
+
  private:
   void CreateFontPipeline();
   void DestroyFontPipeline();

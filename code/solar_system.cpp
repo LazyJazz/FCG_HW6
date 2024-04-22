@@ -29,30 +29,86 @@ void SolarSystem::OnShutdownImpl() {
   }
 
 void SolarSystem::OnUpdateImpl() {
-  font_factory_->ClearDrawCalls();
-  auto extent = Swapchain()->Extent();
-  float aspect = extent.width / static_cast<float>(extent.height);
-  global_uniform_object_.proj =
-      glm::perspective(glm::radians(45.0f), aspect, 0.1f, 40.0f);
-  global_uniform_object_.world =
-      glm::lookAt(glm::vec3{0.0f, 0.0f, 15.0f}, glm::vec3{0.0f, 0.0f, 0.0f},
-                  glm::vec3{0.0f, 1.0f, 0.0f});
-  global_uniform_buffer_->At(0) = global_uniform_object_;
-
   static auto last_time = std::chrono::steady_clock::now();
   auto current_time = std::chrono::steady_clock::now();
   float delta_t =
       std::chrono::duration<float>(current_time - last_time).count();
   last_time = current_time;
 
-  global_t_ += delta_t;
+  font_factory_->ClearDrawCalls();
+  auto extent = Swapchain()->Extent();
+  float aspect = extent.width / static_cast<float>(extent.height);
+  global_uniform_object_.proj =
+      glm::perspective(glm::radians(45.0f), aspect, 0.1f, 40.0f);
+
+  float camera_angular_speed = glm::radians(90.0f);
+  if (glfwGetKey(Window(), GLFW_KEY_A)) {
+    camera_theta_ += camera_angular_speed * delta_t;
+  }
+  if (glfwGetKey(Window(), GLFW_KEY_D)) {
+    camera_theta_ -= camera_angular_speed * delta_t;
+  }
+
+  float sin_camera_theta = std::sin(camera_theta_);
+  float cos_camera_theta = std::cos(camera_theta_);
+
+  global_uniform_object_.world = glm::lookAt(
+      glm::vec3{sin_camera_theta * 15.0f, 0.0f, cos_camera_theta * 15.0f},
+      glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
+  global_uniform_buffer_->At(0) = global_uniform_object_;
+
+  global_t_ += delta_t * time_flowing_ratio_;
 
   for (auto planet : planets_) {
     planet->Update(global_t_);
   }
 
-  font_factory_->DrawText(glm::vec2{0.0f, 60.0f}, "Hello, World!",
-                          glm::vec3{1.0f, 1.0f, 1.0f}, 0.0f);
+  if (show_planet_name_) {
+    font_factory_->SetFont(font_types_[font_select_], 32);
+
+    glm::vec3 planet_name_color{0.6f, 0.7f, 0.8f};
+
+    for (auto planet : planets_) {
+      glm::vec4 pos = global_uniform_object_.proj *
+                      global_uniform_object_.world *
+                      glm::vec4{planet->GetPosition(), 1.0f};
+      double scaled_radius = planet->GetRadius() / pos.w;
+      pos /= pos.w;
+      if (pos.z < 0.0f || pos.z > 1.0f) {
+        continue;
+      }
+      pos.x = (pos.x + 1.0f) * 0.5f * extent.width;
+      pos.y = (1.0f - pos.y) * 0.5f * extent.height;
+      pos.y -= scaled_radius * extent.height * 1.0f;
+      pos.y -= 30.0f;
+      pos.x -= font_factory_->GetTextWidth(planet->GetName()) * 0.5f;
+      font_factory_->DrawText(glm::vec2{pos.x, pos.y}, planet->GetName(),
+                              planet_name_color, pos.z);
+    }
+  }
+
+  if (show_usage_info_) {
+    font_factory_->SetFont(ASSETS_PATH "font/consola.ttf", 16);
+    font_factory_->DrawText(glm::vec2{10.0f, extent.height - 14.0f},
+                            "Press ENTER to turn on/off usage info.",
+                            glm::vec3{1.0f, 1.0f, 1.0f}, 0.0f);
+    font_factory_->DrawText(glm::vec2{10.0f, extent.height - 32.0f},
+                            "Press F to toggle celestial body name font.",
+                            glm::vec3{1.0f, 1.0f, 1.0f}, 0.0f);
+    font_factory_->DrawText(glm::vec2{10.0f, extent.height - 50.0f},
+                            "Press Ctrl to turn on/off celestial body name.",
+                            glm::vec3{1.0f, 1.0f, 1.0f}, 0.0f);
+    font_factory_->DrawText(
+        glm::vec2{10.0f, extent.height - 68.0f},
+        fmt::format("Current speed is: {:.1f}", time_flowing_ratio_),
+        glm::vec3{1.0f, 1.0f, 1.0f}, 0.0f);
+    font_factory_->DrawText(glm::vec2{10.0f, extent.height - 86.0f},
+                            "Use LEFT/RIGHT to speed down/up.",
+                            glm::vec3{1.0f, 1.0f, 1.0f}, 0.0f);
+    font_factory_->DrawText(glm::vec2{10.0f, extent.height - 104.0f},
+                            "Use A/D to rotate camera.",
+                            glm::vec3{1.0f, 1.0f, 1.0f}, 0.0f);
+  }
 
   font_factory_->CompileFontDrawCalls();
 }
@@ -246,16 +302,16 @@ void SolarSystem::DestroyFontFactory() {
 
 void SolarSystem::CreateCelestialBodies() {
   // clang-format off
-  sun_ = std::make_unique<CelestialBody>(this, nullptr, 1.2f, 0.0f, 365.0f / 25.0f, 0.0f, 0.0f, 0.0f, ASSETS_PATH "texture/sun.jpg");
-  mercury_ = std::make_unique<CelestialBody>(this, nullptr, 0.05f, 1.35f, 1.0f / 58.6462f, 365.2564f / 87.9674f, 0.0f, 100.0f, ASSETS_PATH "texture/mercury.jpg");
-  venus_ = std::make_unique<CelestialBody>(this, nullptr, 0.16f, 1.6f, 1.0f / 243.0187f, 365.2564f / 224.6960f, 0.0f, 200.0f, ASSETS_PATH "texture/venus.jpg");
-  earth_ = std::make_unique<CelestialBody>(this, nullptr, 0.18f, 2.0f, 1.0f, 365.2564f / 365.2564f, 0.0f, 300.0f, ASSETS_PATH "texture/earth.jpg");
-  mars_ = std::make_unique<CelestialBody>(this, nullptr, 0.1f, 2.4f, 23.9345f / 24.6230, 365.2564f / 686.9649, 0.0f, 400.0f, ASSETS_PATH "texture/mars.jpg");
-  jupiter_ = std::make_unique<CelestialBody>(this, nullptr, 0.8f, 3.4f, 23.9345f / 9.9250f, 3.0f / 11.862615, 0.0f, 800.0f, ASSETS_PATH "texture/jupiter.jpg");
-  saturn_ = std::make_unique<CelestialBody>(this, nullptr, 0.7f, 5.2f, 23.9345f / 10.6562f, 3.0f / 29.447498, 0.0f, 1600.0f, ASSETS_PATH "texture/saturn.jpg");
-  uranus_ = std::make_unique<CelestialBody>(this, nullptr, 0.6f, 6.7f, 23.9345f / 17.2399f, 3.0f / 84.016846, 0.0f, 2200.0f, ASSETS_PATH "texture/uranus.jpg");
-  neptune_ = std::make_unique<CelestialBody>(this, nullptr, 0.55f, 8.2f, 23.9345f / 16.1100f, 3.0f / 164.79132, 0.0f, 3000.0f, ASSETS_PATH "texture/neptune.jpg");
-  moon_ = std::make_unique<CelestialBody>(this, earth_.get(), 0.03f, 0.2f, -12.0f, 12.0f, 0.0f, 0.0f, ASSETS_PATH "texture/moon.jpg");
+  sun_ = std::make_unique<CelestialBody>(this, nullptr, 1.2f, 0.0f, 365.0f / 25.0f, 0.0f, 0.0f, 0.0f, ASSETS_PATH "texture/sun.jpg", "Sun");
+  mercury_ = std::make_unique<CelestialBody>(this, nullptr, 0.05f, 1.35f, 1.0f / 58.6462f, 365.2564f / 87.9674f, 0.0f, 100.0f, ASSETS_PATH "texture/mercury.jpg", "Mercury");
+  venus_ = std::make_unique<CelestialBody>(this, nullptr, 0.16f, 1.6f, 1.0f / 243.0187f, 365.2564f / 224.6960f, 0.0f, 200.0f, ASSETS_PATH "texture/venus.jpg", "Venus");
+  earth_ = std::make_unique<CelestialBody>(this, nullptr, 0.18f, 2.0f, 1.0f, 365.2564f / 365.2564f, 0.0f, 300.0f, ASSETS_PATH "texture/earth.jpg", "Earth");
+  mars_ = std::make_unique<CelestialBody>(this, nullptr, 0.1f, 2.4f, 23.9345f / 24.6230, 365.2564f / 686.9649, 0.0f, 400.0f, ASSETS_PATH "texture/mars.jpg", "Mars");
+  jupiter_ = std::make_unique<CelestialBody>(this, nullptr, 0.8f, 3.4f, 23.9345f / 9.9250f, 3.0f / 11.862615, 0.0f, 800.0f, ASSETS_PATH "texture/jupiter.jpg", "Jupiter");
+  saturn_ = std::make_unique<CelestialBody>(this, nullptr, 0.7f, 5.2f, 23.9345f / 10.6562f, 3.0f / 29.447498, 0.0f, 1600.0f, ASSETS_PATH "texture/saturn.jpg", "Saturn");
+  uranus_ = std::make_unique<CelestialBody>(this, nullptr, 0.6f, 6.7f, 23.9345f / 17.2399f, 3.0f / 84.016846, 0.0f, 2200.0f, ASSETS_PATH "texture/uranus.jpg", "Uranus");
+  neptune_ = std::make_unique<CelestialBody>(this, nullptr, 0.55f, 8.2f, 23.9345f / 16.1100f, 3.0f / 164.79132, 0.0f, 3000.0f, ASSETS_PATH "texture/neptune.jpg", "Neptune");
+  moon_ = std::make_unique<CelestialBody>(this, earth_.get(), 0.03f, 0.2f, -12.0f, 12.0f, 0.0f, 0.0f, ASSETS_PATH "texture/moon.jpg", "Moon");
   // clang-format on
 
   planets_.push_back(sun_.get());
@@ -281,4 +337,36 @@ void SolarSystem::DestroyCelestialBodies() {
   venus_.reset();
   mercury_.reset();
   sun_.reset();
+}
+
+SolarSystem::SolarSystem() {
+  glfwSetWindowUserPointer(Window(), this);
+  glfwSetKeyCallback(Window(), [](GLFWwindow *window, int key, int scancode,
+                                  int action, int mods) {
+    auto app =
+        reinterpret_cast<SolarSystem *>(glfwGetWindowUserPointer(window));
+    app->KeyCallBack(key, scancode, action, mods);
+  });
+
+  font_types_[0] = ASSETS_PATH "font/consola.ttf";
+  font_types_[1] = ASSETS_PATH "font/georgia.ttf";
+}
+
+void SolarSystem::KeyCallBack(int key, int scancode, int action, int mods) {
+  if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+    if (key == GLFW_KEY_F) {
+      font_select_ = (font_select_ + 1) % 2;
+    } else if (key == GLFW_KEY_ENTER) {
+      show_usage_info_ = !show_usage_info_;
+    } else if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL) {
+      show_planet_name_ = !show_planet_name_;
+    } else if (key == GLFW_KEY_LEFT) {
+      time_flowing_ratio_ -= 0.1f;
+    } else if (key == GLFW_KEY_RIGHT) {
+      time_flowing_ratio_ += 0.1f;
+    }
+    if (std::fabs(time_flowing_ratio_) < 1e-5f) {
+      time_flowing_ratio_ = 0.0f;
+    }
+  }
 }

@@ -12,11 +12,12 @@ class CelestialBody {
                 CelestialBody *parent,
                 float radius,
                 float revolution_radius,
-                float rotational_speed,
+                float rotation_speed,
                 float revolution_speed,
-                float rotaional_phase,
+                float rotation_phase,
                 float revolution_phase,
-                const std::string &texture_path);
+                const std::string &texture_path,
+                std::string name);
 
   void Update(float t);
 
@@ -28,6 +29,18 @@ class CelestialBody {
 
   [[nodiscard]] glm::mat4 LocalTransform() const {
     return local_transform_;
+  }
+
+  [[nodiscard]] glm::vec3 GetPosition() const {
+    return glm::vec3(world_transform_[3]);
+  }
+
+  [[nodiscard]] std::string GetName() const {
+    return name_;
+  }
+
+  [[nodiscard]] float GetRadius() const {
+    return radius_;
   }
 
  private:
@@ -45,4 +58,6 @@ class CelestialBody {
 
   glm::mat4 world_transform_;
   glm::mat4 local_transform_;
+
+  std::string name_;
 };

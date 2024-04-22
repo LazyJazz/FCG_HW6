@@ -266,3 +266,12 @@ void FontFactory::DrawText(glm::vec2 pos,
     pos.x += font.advance_x_;
   }
 }
+
+float FontFactory::GetTextWidth(const std::string &text) {
+  float result = 0.0f;
+  for (auto c : text) {
+    auto font = LoadChar(c);
+    result += font.advance_x_;
+  }
+  return result;
+}

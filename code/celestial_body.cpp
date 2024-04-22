@@ -6,19 +6,21 @@ CelestialBody::CelestialBody(SolarSystem *solar_system,
                              CelestialBody *parent,
                              float radius,
                              float revolution_radius,
-                             float rotational_speed,
+                             float rotation_speed,
                              float revolution_speed,
-                             float rotaional_phase,
+                             float rotation_phase,
                              float revolution_phase,
-                             const std::string &texture_path)
+                             const std::string &texture_path,
+                             std::string name)
     : solar_system_(solar_system),
       parent_(parent),
       radius_(radius),
-      rotation_speed_(rotational_speed),
-      rotation_phase_(rotaional_phase),
+      rotation_speed_(rotation_speed),
+      rotation_phase_(rotation_phase),
       revolution_speed_(revolution_speed),
       revolution_phase_(revolution_phase),
-      revolution_radius_(revolution_radius) {
+      revolution_radius_(revolution_radius),
+      name_(std::move(name)) {
   Image image;
   image.ReadFromFile(texture_path);
   texture_ = std::make_unique<TextureImage>(solar_system_, image);
