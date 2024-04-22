@@ -6,7 +6,7 @@ Application::Application() {
   }
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  //  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
   window_ = glfwCreateWindow(1280, 720, "FCG HW2", nullptr, nullptr);
   if (!window_) {
@@ -299,6 +299,8 @@ void Application::BeginFrame() {
       THROW_IF_FAILED(device_->WaitIdle(),
                       "Failed to wait for device idle, on swapchain recreate.");
       CreateSwapchain();
+      DestroyFramebufferAssets();
+      CreateFramebufferAssets();
       return;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
       throw std::runtime_error("Failed to acquire next image.");
@@ -364,6 +366,8 @@ void Application::EndFrame() {
       THROW_IF_FAILED(device_->WaitIdle(),
                       "Failed to wait for device idle, on swapchain recreate.");
       CreateSwapchain();
+      DestroyFramebufferAssets();
+      CreateFramebufferAssets();
     } else if (result != VK_SUCCESS) {
       throw std::runtime_error("Failed to present image.");
     }
