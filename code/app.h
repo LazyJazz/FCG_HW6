@@ -1,7 +1,5 @@
 #pragma once
-#include "long_march.h"
-
-using namespace long_march;
+#include "utils.h"
 
 class Application {
  public:
@@ -9,14 +7,44 @@ class Application {
   ~Application();
   void Run();
 
+  [[nodiscard]] uint32_t MaxFramesInFlight() const {
+    return max_frames_in_flight_;
+  }
+  [[nodiscard]] const vulkan::Device *Device() const {
+    return device_.get();
+  }
+  [[nodiscard]] const vulkan::Queue *GraphicsQueue() const {
+    return graphics_queue_.get();
+  }
+  [[nodiscard]] const vulkan::CommandPool *GraphicsCommandPool() const {
+    return graphics_command_pool_.get();
+  }
+  [[nodiscard]] const vulkan::Queue *TransferQueue() const {
+    return transfer_queue_.get();
+  }
+  [[nodiscard]] const vulkan::CommandPool *TransferCommandPool() const {
+    return transfer_command_pool_.get();
+  }
+  [[nodiscard]] const vulkan::RenderPass *RenderPass() const {
+    return render_pass_.get();
+  }
+  [[nodiscard]] uint32_t CurrentFrame() const {
+    return current_frame_;
+  }
+
+  void RegisterDynamicBuffer(DynamicBufferBase *buffer);
+  void UnregisterDynamicBuffer(DynamicBufferBase *buffer);
+
  private:
   void OnInit();
-
   void OnUpdate();
-
   void OnRender();
-
   void OnShutdown();
+
+  virtual void OnInitImpl() = 0;
+  virtual void OnShutdownImpl() = 0;
+  virtual void OnUpdateImpl() = 0;
+  virtual void OnRenderImpl(VkCommandBuffer cmd_buffer) = 0;
 
   void CreateDevice();
   void CreateSwapchain();
@@ -33,7 +61,6 @@ class Application {
   void DestroyDescriptorComponents();
 
   void BeginFrame();
-
   void EndFrame();
 
   GLFWwindow *window_{};
@@ -68,4 +95,6 @@ class Application {
 
   uint32_t current_frame_{};
   uint32_t image_index_{};
+
+  std::set<DynamicBufferBase *> dynamic_buffers_;
 };

@@ -1,5 +1,7 @@
 #include "app.h"
 
+#include "buffer.h"
+
 Application::Application() {
   if (!glfwInit()) {
     throw std::runtime_error("glfwInit failed.");
@@ -44,9 +46,11 @@ void Application::OnInit() {
   CreateRenderPass();
   CreateFramebufferAssets();
   CreateDescriptorComponents();
+  OnInitImpl();
 }
 
 void Application::OnShutdown() {
+  OnShutdownImpl();
   DestroyDescriptorComponents();
   DestroyFramebufferAssets();
   DestroyRenderPass();
@@ -56,6 +60,14 @@ void Application::OnShutdown() {
 }
 
 void Application::OnUpdate() {
+  OnUpdateImpl();
+  vulkan::SingleTimeCommand(
+      transfer_queue_.get(), transfer_command_pool_.get(),
+      [&](VkCommandBuffer cmd_buffer) {
+        for (auto dynamic_buffer : dynamic_buffers_) {
+          dynamic_buffer->Sync(command_buffers_[current_frame_]->Handle());
+        }
+      });
 }
 
 void Application::OnRender() {
@@ -69,6 +81,8 @@ void Application::OnRender() {
   clear_values[0].color = {0.6f, 0.7f, 0.8f, 1.0f};
   clear_values[1].depthStencil = {1.0f, 0};
 
+  VkExtent2D framebuffer_extent = framebuffer_->Extent();
+
   VkRenderPassBeginInfo begin_info{};
   begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   begin_info.renderPass = render_pass_->Handle();
@@ -76,9 +90,26 @@ void Application::OnRender() {
   begin_info.clearValueCount = 2;
   begin_info.pClearValues = clear_values;
   begin_info.renderArea.offset = {0, 0};
-  begin_info.renderArea.extent = framebuffer_->Extent();
+  begin_info.renderArea.extent = framebuffer_extent;
 
   vkCmdBeginRenderPass(cmd_buffer, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+  // Set viewport and scissor
+  VkViewport viewport{};
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.width = framebuffer_extent.width;
+  viewport.height = framebuffer_extent.height;
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
+
+  VkRect2D scissor{};
+  scissor.offset = {0, 0};
+  scissor.extent = framebuffer_extent;
+  vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
+
+  OnRenderImpl(cmd_buffer);
 
   vkCmdEndRenderPass(cmd_buffer);
 
@@ -374,4 +405,12 @@ void Application::EndFrame() {
   }
 
   current_frame_ = (current_frame_ + 1) % max_frames_in_flight_;
+}
+
+void Application::RegisterDynamicBuffer(DynamicBufferBase *buffer) {
+  dynamic_buffers_.insert(buffer);
+}
+
+void Application::UnregisterDynamicBuffer(DynamicBufferBase *buffer) {
+  dynamic_buffers_.erase(buffer);
 }
