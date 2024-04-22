@@ -61,13 +61,15 @@ void Application::OnShutdown() {
 
 void Application::OnUpdate() {
   OnUpdateImpl();
-  vulkan::SingleTimeCommand(
-      transfer_queue_.get(), transfer_command_pool_.get(),
-      [&](VkCommandBuffer cmd_buffer) {
-        for (auto dynamic_buffer : dynamic_buffers_) {
-          dynamic_buffer->Sync(command_buffers_[current_frame_]->Handle());
-        }
-      });
+  VkResult result;
+  THROW_IF_FAILED(vulkan::SingleTimeCommand(
+                      transfer_queue_.get(), transfer_command_pool_.get(),
+                      [&](VkCommandBuffer cmd_buffer) {
+                        for (auto dynamic_buffer : dynamic_buffers_) {
+                          dynamic_buffer->Sync(cmd_buffer);
+                        }
+                      }),
+                  "Failed to execute single time command.")
 }
 
 void Application::OnRender() {
@@ -308,9 +310,37 @@ void Application::DestroyFramebufferAssets() {
 }
 
 void Application::CreateDescriptorComponents() {
+  VkResult result;
+
+  THROW_IF_FAILED(
+      device_->CreateSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR,
+                             VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                             VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+                             VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, false,
+                             VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
+                             VK_SAMPLER_MIPMAP_MODE_LINEAR, &entity_sampler_),
+      "Failed to create entity sampler.")
+
+  VkSampler sampler = entity_sampler_->Handle();
+  THROW_IF_FAILED(device_->CreateDescriptorSetLayout(
+                      {{0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1,
+                        VK_SHADER_STAGE_FRAGMENT_BIT, &sampler}},
+                      &entity_descriptor_set_layout_),
+                  "Failed to create entity descriptor set layout.")
+
+  vulkan::DescriptorPoolSize pool_size =
+      (entity_descriptor_set_layout_->GetPoolSize() * 1024) *
+      max_frames_in_flight_;
+  THROW_IF_FAILED(device_->CreateDescriptorPool(
+                      pool_size.ToVkDescriptorPoolSize(),
+                      max_frames_in_flight_ * 1024, &entity_descriptor_pool_),
+                  "Failed to create entity descriptor pool.")
 }
 
 void Application::DestroyDescriptorComponents() {
+  entity_descriptor_pool_.reset();
+  entity_descriptor_set_layout_.reset();
+  entity_sampler_.reset();
 }
 
 void Application::BeginFrame() {

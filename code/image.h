@@ -1,5 +1,5 @@
 #pragma once
-#include "app.h"
+#include "utils.h"
 
 class ImagePixel {
   uint8_t r;
@@ -10,7 +10,7 @@ class ImagePixel {
 
 class Image {
  public:
-  Image(size_t width, size_t height, ImagePixel pixel = ImagePixel{})
+  Image(size_t width = 1, size_t height = 1, ImagePixel pixel = ImagePixel{})
       : width_(width), height_(height), pixels_(width * height, pixel) {
   }
 
@@ -42,6 +42,10 @@ class Image {
   [[nodiscard]] const ImagePixel &operator()(size_t x, size_t y) const {
     return pixels_[y * width_ + x];
   }
+
+  void ReadFromFile(const std::string &path);
+
+  void WriteToFile(const std::string &path) const;
 
  private:
   std::vector<ImagePixel> pixels_;

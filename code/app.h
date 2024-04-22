@@ -1,4 +1,5 @@
 #pragma once
+#include "glm/glm.hpp"
 #include "utils.h"
 
 class Application {
@@ -27,6 +28,13 @@ class Application {
   }
   [[nodiscard]] const vulkan::RenderPass *RenderPass() const {
     return render_pass_.get();
+  }
+  [[nodiscard]] const vulkan::DescriptorSetLayout *EntityDescriptorSetLayout()
+      const {
+    return entity_descriptor_set_layout_.get();
+  }
+  [[nodiscard]] const vulkan::DescriptorPool *EntityDescriptorPool() const {
+    return entity_descriptor_pool_.get();
   }
   [[nodiscard]] uint32_t CurrentFrame() const {
     return current_frame_;
@@ -97,4 +105,8 @@ class Application {
   uint32_t image_index_{};
 
   std::set<DynamicBufferBase *> dynamic_buffers_;
+
+  std::unique_ptr<vulkan::Sampler> entity_sampler_;
+  std::unique_ptr<vulkan::DescriptorSetLayout> entity_descriptor_set_layout_;
+  std::unique_ptr<vulkan::DescriptorPool> entity_descriptor_pool_;
 };

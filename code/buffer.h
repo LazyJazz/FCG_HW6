@@ -97,8 +97,12 @@ class DynamicBuffer : public DynamicBufferBase {
   ~DynamicBuffer() override {
   }
 
+  [[nodiscard]] vulkan::Buffer *GetBuffer(uint32_t index) const {
+    return buffers_[index].get();
+  }
+
   [[nodiscard]] vulkan::Buffer *GetBuffer() const override {
-    return buffers_[app_->CurrentFrame()].get();
+    return GetBuffer(app_->CurrentFrame());
   }
 
   void Sync(VkCommandBuffer cmd_buffer) override {
