@@ -136,6 +136,10 @@ class DynamicBuffer : public DynamicBufferBase {
     return staging_data_;
   }
 
+  [[nodiscard]] size_t Size() const {
+    return size_;
+  }
+
  private:
   void Map() {
     if (staging_data_ == nullptr) {

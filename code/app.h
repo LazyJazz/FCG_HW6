@@ -39,6 +39,9 @@ class Application {
   [[nodiscard]] const vulkan::Swapchain *Swapchain() const {
     return swapchain_.get();
   }
+  [[nodiscard]] const vulkan::Sampler *EntitySampler() const {
+    return entity_sampler_.get();
+  }
   [[nodiscard]] uint32_t CurrentFrame() const {
     return current_frame_;
   }

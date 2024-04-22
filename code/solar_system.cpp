@@ -10,11 +10,13 @@ void SolarSystem::OnInitImpl() {
   CreateGlobalAssets();
   CreateEntityPipelineAssets();
   CreateEntities();
+  CreateFontFactory();
   CreateCelestialBodies();
 }
 
 void SolarSystem::OnShutdownImpl() {
   DestroyCelestialBodies();
+  DestroyFontFactory();
   DestroyEntities();
   DestroyEntityPipelineAssets();
   DestroyGlobalAssets();
@@ -27,6 +29,7 @@ void SolarSystem::OnShutdownImpl() {
   }
 
 void SolarSystem::OnUpdateImpl() {
+  font_factory_->ClearDrawCalls();
   auto extent = Swapchain()->Extent();
   float aspect = extent.width / static_cast<float>(extent.height);
   global_uniform_object_.proj =
@@ -47,6 +50,11 @@ void SolarSystem::OnUpdateImpl() {
   for (auto planet : planets_) {
     planet->Update(global_t_);
   }
+
+  font_factory_->DrawText(glm::vec2{0.0f, 60.0f}, "Hello, World!",
+                          glm::vec3{1.0f, 1.0f, 1.0f}, 0.0f);
+
+  font_factory_->CompileFontDrawCalls();
 }
 
 void SolarSystem::OnRenderImpl(VkCommandBuffer cmd_buffer) {
@@ -63,6 +71,8 @@ void SolarSystem::OnRenderImpl(VkCommandBuffer cmd_buffer) {
   for (auto planet : planets_) {
     planet->Render(cmd_buffer);
   }
+
+  font_factory_->Render(cmd_buffer);
 }
 
 void SolarSystem::CreateEntityPipelineAssets() {
@@ -223,6 +233,15 @@ void SolarSystem::DestroyGlobalAssets() {
   global_descriptor_pool_.reset();
   global_descriptor_set_layout_.reset();
   global_uniform_buffer_.reset();
+}
+
+void SolarSystem::CreateFontFactory() {
+  font_factory_ = std::make_unique<FontFactory>(this);
+  font_factory_->SetFont(ASSETS_PATH "font/georgia.ttf", 32);
+}
+
+void SolarSystem::DestroyFontFactory() {
+  font_factory_.reset();
 }
 
 void SolarSystem::CreateCelestialBodies() {

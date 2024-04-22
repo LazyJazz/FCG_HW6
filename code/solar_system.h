@@ -3,6 +3,7 @@
 #include "buffer.h"
 #include "celestial_body.h"
 #include "entity.h"
+#include "font_factory.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "model.h"
@@ -32,11 +33,13 @@ class SolarSystem : public Application {
   void CreateEntityPipelineAssets();
   void CreateGlobalAssets();
   void CreateEntities();
+  void CreateFontFactory();
   void CreateCelestialBodies();
 
   void DestroyEntityPipelineAssets();
   void DestroyGlobalAssets();
   void DestroyEntities();
+  void DestroyFontFactory();
   void DestroyCelestialBodies();
 
   std::shared_ptr<vulkan::DescriptorPool> descriptor_pool_;
@@ -73,6 +76,8 @@ class SolarSystem : public Application {
   std::unique_ptr<class CelestialBody> moon_;
 
   std::vector<CelestialBody *> planets_;
+
+  std::unique_ptr<FontFactory> font_factory_;
 
   float global_t_{0.0f};
 };

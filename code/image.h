@@ -1,7 +1,7 @@
 #pragma once
 #include "utils.h"
 
-class ImagePixel {
+struct ImagePixel {
   uint8_t r;
   uint8_t g;
   uint8_t b;
@@ -12,6 +12,16 @@ class Image {
  public:
   Image(size_t width = 1, size_t height = 1, ImagePixel pixel = ImagePixel{})
       : width_(width), height_(height), pixels_(width * height, pixel) {
+  }
+
+  Image(size_t width, size_t height, uint8_t *data)
+      : width_(width), height_(height), pixels_(width * height) {
+    for (size_t i = 0; i < width * height; ++i) {
+      pixels_[i].r = data[i];
+      pixels_[i].g = data[i];
+      pixels_[i].b = data[i];
+      pixels_[i].a = data[i];
+    }
   }
 
   [[nodiscard]] size_t Width() const {
