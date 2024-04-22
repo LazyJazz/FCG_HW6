@@ -1,5 +1,7 @@
 #include "solar_system.h"
 
+#include "celestial_body.h"
+
 namespace {
 #include "built_in_shaders.inl"
 }
@@ -8,9 +10,11 @@ void SolarSystem::OnInitImpl() {
   CreateGlobalAssets();
   CreateEntityPipelineAssets();
   CreateEntities();
+  CreateCelestialBodies();
 }
 
 void SolarSystem::OnShutdownImpl() {
+  DestroyCelestialBodies();
   DestroyEntities();
   DestroyEntityPipelineAssets();
   DestroyGlobalAssets();
@@ -23,29 +27,37 @@ void SolarSystem::OnShutdownImpl() {
   }
 
 void SolarSystem::OnUpdateImpl() {
-  global_uniform_object_.proj = glm::mat4{1.0f};
-  global_uniform_object_.world = glm::mat4{1.0f};
+  auto extent = Swapchain()->Extent();
+  float aspect = extent.width / static_cast<float>(extent.height);
+  global_uniform_object_.proj =
+      glm::perspective(glm::radians(45.0f), aspect, 0.1f, 40.0f);
+  global_uniform_object_.world =
+      glm::lookAt(glm::vec3{0.0f, 0.0f, 15.0f}, glm::vec3{0.0f, 0.0f, 0.0f},
+                  glm::vec3{0.0f, 1.0f, 0.0f});
   global_uniform_buffer_->At(0) = global_uniform_object_;
 }
 
 void SolarSystem::OnRenderImpl(VkCommandBuffer cmd_buffer) {
   vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    pipeline_->Handle());
+                    entity_pipeline_->Handle());
 
   VkDescriptorSet descriptor_sets[] = {
       global_descriptor_sets_[CurrentFrame()]->Handle()};
   vkCmdBindDescriptorSets(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                          pipeline_layout_->Handle(), 0, 1, descriptor_sets, 0,
-                          nullptr);
+                          entity_pipeline_layout_->Handle(), 0, 1,
+                          descriptor_sets, 0, nullptr);
 
-  triangle_entity_->Render(cmd_buffer, pipeline_layout_->Handle());
+  //  triangle_entity_->Render(cmd_buffer, entity_pipeline_layout_->Handle());
+  for (auto planet : planets_) {
+    planet->Render(cmd_buffer);
+  }
 }
 
 void SolarSystem::CreateEntityPipelineAssets() {
   IgnoreResult(
       Device()->CreatePipelineLayout({global_descriptor_set_layout_->Handle(),
                                       EntityDescriptorSetLayout()->Handle()},
-                                     &pipeline_layout_));
+                                     &entity_pipeline_layout_));
   IgnoreResult(Device()->CreateShaderModule(
       vulkan::CompileGLSLToSPIRV(GetShaderCode("shaders/entity.vert"),
                                  VK_SHADER_STAGE_VERTEX_BIT),
@@ -56,7 +68,7 @@ void SolarSystem::CreateEntityPipelineAssets() {
       &entity_frag_shader_));
 
   vulkan::PipelineSettings pipeline_settings(RenderPass(),
-                                             pipeline_layout_.get(), 0);
+                                             entity_pipeline_layout_.get(), 0);
   pipeline_settings.AddInputBinding(0, sizeof(Vertex),
                                     VK_VERTEX_INPUT_RATE_VERTEX);
   pipeline_settings.AddInputAttribute(0, 0, VK_FORMAT_R32G32B32_SFLOAT,
@@ -73,14 +85,14 @@ void SolarSystem::CreateEntityPipelineAssets() {
                                    VK_SHADER_STAGE_VERTEX_BIT);
   pipeline_settings.AddShaderStage(entity_frag_shader_.get(),
                                    VK_SHADER_STAGE_FRAGMENT_BIT);
-  IgnoreResult(Device()->CreatePipeline(pipeline_settings, &pipeline_));
+  IgnoreResult(Device()->CreatePipeline(pipeline_settings, &entity_pipeline_));
 }
 
 void SolarSystem::DestroyEntityPipelineAssets() {
-  pipeline_.reset();
+  entity_pipeline_.reset();
   entity_vert_shader_.reset();
   entity_frag_shader_.reset();
-  pipeline_layout_.reset();
+  entity_pipeline_layout_.reset();
 }
 
 void SolarSystem::CreateEntities() {
@@ -108,9 +120,43 @@ void SolarSystem::CreateEntities() {
   triangle_texture_image_ = std::make_unique<TextureImage>(this, image);
   triangle_entity_ = std::make_unique<Entity>(this, triangle_.get(),
                                               triangle_texture_image_.get());
+
+  const int precision = 30;
+  const float inv_precision = 1.0f / float(precision);
+  std::vector<Vertex> sphere_vertices;
+  std::vector<uint32_t> sphere_indices;
+
+  for (int i = 0; i <= precision; i++) {
+    float phi = glm::pi<float>() * float(i) * inv_precision;
+    for (int j = 0; j < precision; j++) {
+      float theta = 2.0f * glm::pi<float>() * float(j) * inv_precision;
+      glm::vec3 pos = glm::vec3{glm::cos(theta) * glm::sin(phi), glm::cos(phi),
+                                glm::sin(theta) * glm::sin(phi)};
+      glm::vec3 normal = glm::normalize(pos);
+      glm::vec3 color = glm::vec3{1.0f, 1.0f, 1.0f};
+      glm::vec2 tex_coord =
+          glm::vec2{float(j) * inv_precision, float(i) * inv_precision};
+      sphere_vertices.push_back({pos, normal, color, tex_coord});
+
+      if (i) {
+        int i1 = (i - 1 + precision) % precision;
+        int j1 = (j + 1 + precision) % precision;
+        sphere_indices.push_back(i1 * precision + j);
+        sphere_indices.push_back(i1 * precision + j1);
+        sphere_indices.push_back(i * precision + j);
+        sphere_indices.push_back(i1 * precision + j1);
+        sphere_indices.push_back(i * precision + j1);
+        sphere_indices.push_back(i * precision + j);
+      }
+    }
+  }
+
+  sphere_ = std::make_unique<Model>(this, sphere_vertices, sphere_indices);
 }
 
 void SolarSystem::DestroyEntities() {
+  sphere_.reset();
+
   triangle_texture_image_.reset();
   triangle_entity_.reset();
   triangle_.reset();
@@ -165,4 +211,15 @@ void SolarSystem::DestroyGlobalAssets() {
   global_descriptor_pool_.reset();
   global_descriptor_set_layout_.reset();
   global_uniform_buffer_.reset();
+}
+
+void SolarSystem::CreateCelestialBodies() {
+  sun_ = std::make_unique<CelestialBody>(this, nullptr, 1.0f, 1.0f, 0.0f, 1.0f,
+                                         0.0f, 0.0f,
+                                         ASSETS_PATH "texture/sun.jpg");
+  planets_.push_back(sun_.get());
+}
+
+void SolarSystem::DestroyCelestialBodies() {
+  sun_.reset();
 }

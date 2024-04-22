@@ -1,6 +1,7 @@
 #pragma once
 #include "app.h"
 #include "buffer.h"
+#include "celestial_body.h"
 #include "entity.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -14,6 +15,14 @@ struct GlobalUniformObject {
 
 class SolarSystem : public Application {
  public:
+  [[nodiscard]] Model *GetSphereModel() const {
+    return sphere_.get();
+  }
+
+  [[nodiscard]] vulkan::PipelineLayout *EntityPipelineLayout() const {
+    return entity_pipeline_layout_.get();
+  }
+
  private:
   void OnInitImpl() override;
   void OnUpdateImpl() override;
@@ -23,10 +32,12 @@ class SolarSystem : public Application {
   void CreateEntityPipelineAssets();
   void CreateGlobalAssets();
   void CreateEntities();
+  void CreateCelestialBodies();
 
   void DestroyEntityPipelineAssets();
   void DestroyGlobalAssets();
   void DestroyEntities();
+  void DestroyCelestialBodies();
 
   std::shared_ptr<vulkan::DescriptorPool> descriptor_pool_;
   std::shared_ptr<vulkan::DescriptorSetLayout> descriptor_set_layout_;
@@ -34,12 +45,14 @@ class SolarSystem : public Application {
 
   std::shared_ptr<vulkan::ShaderModule> entity_vert_shader_;
   std::shared_ptr<vulkan::ShaderModule> entity_frag_shader_;
-  std::shared_ptr<vulkan::PipelineLayout> pipeline_layout_;
-  std::shared_ptr<vulkan::Pipeline> pipeline_;
+  std::shared_ptr<vulkan::PipelineLayout> entity_pipeline_layout_;
+  std::shared_ptr<vulkan::Pipeline> entity_pipeline_;
 
   std::unique_ptr<Model> triangle_;
   std::unique_ptr<TextureImage> triangle_texture_image_;
   std::unique_ptr<Entity> triangle_entity_;
+
+  std::unique_ptr<Model> sphere_;
 
   std::unique_ptr<vulkan::DescriptorSetLayout> global_descriptor_set_layout_;
   std::unique_ptr<vulkan::DescriptorPool> global_descriptor_pool_;
@@ -47,4 +60,7 @@ class SolarSystem : public Application {
   std::unique_ptr<DynamicBuffer<GlobalUniformObject>> global_uniform_buffer_;
 
   GlobalUniformObject global_uniform_object_;
+
+  std::unique_ptr<class CelestialBody> sun_;
+  std::vector<CelestialBody *> planets_;
 };

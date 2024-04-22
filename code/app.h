@@ -36,6 +36,9 @@ class Application {
   [[nodiscard]] const vulkan::DescriptorPool *EntityDescriptorPool() const {
     return entity_descriptor_pool_.get();
   }
+  [[nodiscard]] const vulkan::Swapchain *Swapchain() const {
+    return swapchain_.get();
+  }
   [[nodiscard]] uint32_t CurrentFrame() const {
     return current_frame_;
   }

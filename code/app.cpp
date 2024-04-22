@@ -80,7 +80,7 @@ void Application::OnRender() {
   VkImage swapchain_image = swapchain_->Image(image_index_);
 
   VkClearValue clear_values[2];
-  clear_values[0].color = {0.6f, 0.7f, 0.8f, 1.0f};
+  clear_values[0].color = {0.0f, 0.0f, 0.0f, 1.0f};
   clear_values[1].depthStencil = {1.0f, 0};
 
   VkExtent2D framebuffer_extent = framebuffer_->Extent();
