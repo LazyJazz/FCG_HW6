@@ -1,0 +1,16 @@
+{
+  "name": "fcghw2",
+  "version-string": "0.0.1",
+  "description": "Homework 2 for Fundamentals of Computer Graphics",
+  "dependencies": [
+    "eigen3",
+    "glfw3",
+    "fmt",
+    "spdlog",
+    "vulkan-memory-allocator",
+    "glslang",
+    "glm",
+    "freetype",
+    "stb"
+  ]
+}

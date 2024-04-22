@@ -1,0 +1,3 @@
+[submodule "LongMarch"]
+	path = LongMarch
+	url = git@github.com:LazyJazzDev/LongMarch.git
