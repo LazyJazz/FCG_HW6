@@ -21,11 +21,15 @@ class Application {
   void CreateDevice();
   void CreateSwapchain();
   void CreateFrameCommonAssets();
+  void CreateRenderPass();
+  void CreateFramebufferAssets();
   void CreateDescriptorComponents();
 
   void DestroyDevice();
   void DestroySwapchain();
   void DestroyFrameCommonAssets();
+  void DestroyRenderPass();
+  void DestroyFramebufferAssets();
   void DestroyDescriptorComponents();
 
   void BeginFrame();
@@ -56,6 +60,11 @@ class Application {
   std::vector<std::shared_ptr<long_march::vulkan::Semaphore>>
       render_finished_semaphores_;
   std::vector<std::shared_ptr<long_march::vulkan::Fence>> in_flight_fences_;
+
+  std::shared_ptr<vulkan::Image> frame_image_;
+  std::shared_ptr<vulkan::Image> depth_image_;
+  std::shared_ptr<vulkan::RenderPass> render_pass_;
+  std::shared_ptr<vulkan::Framebuffer> framebuffer_;
 
   uint32_t current_frame_{};
   uint32_t image_index_{};
