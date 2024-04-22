@@ -226,44 +226,18 @@ void SolarSystem::DestroyGlobalAssets() {
 }
 
 void SolarSystem::CreateCelestialBodies() {
-  sun_ = std::make_unique<CelestialBody>(this, nullptr, 1.0f, 0.0f,
-                                         365.0f / 25.0f, 0.0f, 0.0f, 0.0f,
-                                         ASSETS_PATH "texture/sun.jpg");
-  mercury_ = std::make_unique<CelestialBody>(
-      this, nullptr, 0.05f, 1.15f, 1.0f / 58.6462f, 365.2564f / 87.9674f, 0.0f,
-      100.0f, ASSETS_PATH "texture/mercury.jpg");
-  venus_ = std::make_unique<CelestialBody>(
-      this, nullptr, 0.16f, 1.4f, 1.0f / 243.0187f, 365.2564f / 224.6960f, 0.0f,
-      200.0f, ASSETS_PATH "texture/venus.jpg");
-  earth_ = std::make_unique<CelestialBody>(this, nullptr, 0.18f, 1.8f, 1.0f,
-                                           365.2564f / 365.2564f, 0.0f, 300.0f,
-                                           ASSETS_PATH "texture/earth.jpg");
-  mars_ = std::make_unique<CelestialBody>(
-      this, nullptr, 0.1f, 2.2f, 23.9345f / 24.6230, 365.2564f / 686.9649, 0.0f,
-      400.0f, ASSETS_PATH "texture/mars.jpg");
-  jupiter_ = std::make_unique<CelestialBody>(
-      this, nullptr, 0.8f, 3.2f, 23.9345f / 9.9250f, 1.0f / 11.862615, 0.0f,
-      800.0f, ASSETS_PATH "texture/jupiter.jpg");
-  saturn_ = std::make_unique<CelestialBody>(
-      this, nullptr, 0.7f, 5.0f, 23.9345f / 10.6562f, 1.0f / 29.447498, 0.0f,
-      1600.0f, ASSETS_PATH "texture/saturn.jpg");
-  uranus_ = std::make_unique<CelestialBody>(
-      this, nullptr, 0.6f, 6.5f, 23.9345f / 17.2399f, 1.0f / 84.016846, 0.0f,
-      2200.0f, ASSETS_PATH "texture/uranus.jpg");
-  neptune_ = std::make_unique<CelestialBody>(
-      this, nullptr, 0.55f, 8.0f, 23.9345f / 16.1100f, 1.0f / 164.79132, 0.0f,
-      3000.0f, ASSETS_PATH "texture/neptune.jpg");
-  moon_ = std::make_unique<CelestialBody>(this, earth_.get(), 0.03f, 0.2f,
-                                          -12.0f, 12.0f, 0.0f, 0.0f,
-                                          ASSETS_PATH "texture/moon.jpg");
-  // 0.034129693
-  // 0.084652828
-  // 0.089212779
-  // 0.047515806
-  // 1
-  // 0.843003413
-  // 0.357508532
-  // 0.346388407
+  // clang-format off
+  sun_ = std::make_unique<CelestialBody>(this, nullptr, 1.2f, 0.0f, 365.0f / 25.0f, 0.0f, 0.0f, 0.0f, ASSETS_PATH "texture/sun.jpg");
+  mercury_ = std::make_unique<CelestialBody>(this, nullptr, 0.05f, 1.35f, 1.0f / 58.6462f, 365.2564f / 87.9674f, 0.0f, 100.0f, ASSETS_PATH "texture/mercury.jpg");
+  venus_ = std::make_unique<CelestialBody>(this, nullptr, 0.16f, 1.6f, 1.0f / 243.0187f, 365.2564f / 224.6960f, 0.0f, 200.0f, ASSETS_PATH "texture/venus.jpg");
+  earth_ = std::make_unique<CelestialBody>(this, nullptr, 0.18f, 2.0f, 1.0f, 365.2564f / 365.2564f, 0.0f, 300.0f, ASSETS_PATH "texture/earth.jpg");
+  mars_ = std::make_unique<CelestialBody>(this, nullptr, 0.1f, 2.4f, 23.9345f / 24.6230, 365.2564f / 686.9649, 0.0f, 400.0f, ASSETS_PATH "texture/mars.jpg");
+  jupiter_ = std::make_unique<CelestialBody>(this, nullptr, 0.8f, 3.4f, 23.9345f / 9.9250f, 3.0f / 11.862615, 0.0f, 800.0f, ASSETS_PATH "texture/jupiter.jpg");
+  saturn_ = std::make_unique<CelestialBody>(this, nullptr, 0.7f, 5.2f, 23.9345f / 10.6562f, 3.0f / 29.447498, 0.0f, 1600.0f, ASSETS_PATH "texture/saturn.jpg");
+  uranus_ = std::make_unique<CelestialBody>(this, nullptr, 0.6f, 6.7f, 23.9345f / 17.2399f, 3.0f / 84.016846, 0.0f, 2200.0f, ASSETS_PATH "texture/uranus.jpg");
+  neptune_ = std::make_unique<CelestialBody>(this, nullptr, 0.55f, 8.2f, 23.9345f / 16.1100f, 3.0f / 164.79132, 0.0f, 3000.0f, ASSETS_PATH "texture/neptune.jpg");
+  moon_ = std::make_unique<CelestialBody>(this, earth_.get(), 0.03f, 0.2f, -12.0f, 12.0f, 0.0f, 0.0f, ASSETS_PATH "texture/moon.jpg");
+  // clang-format on
 
   planets_.push_back(sun_.get());
   planets_.push_back(mercury_.get());
