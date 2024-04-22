@@ -62,5 +62,17 @@ class SolarSystem : public Application {
   GlobalUniformObject global_uniform_object_;
 
   std::unique_ptr<class CelestialBody> sun_;
+  std::unique_ptr<class CelestialBody> mercury_;
+  std::unique_ptr<class CelestialBody> venus_;
+  std::unique_ptr<class CelestialBody> earth_;
+  std::unique_ptr<class CelestialBody> mars_;
+  std::unique_ptr<class CelestialBody> jupiter_;
+  std::unique_ptr<class CelestialBody> saturn_;
+  std::unique_ptr<class CelestialBody> uranus_;
+  std::unique_ptr<class CelestialBody> neptune_;
+  std::unique_ptr<class CelestialBody> moon_;
+
   std::vector<CelestialBody *> planets_;
+
+  float global_t_{0.0f};
 };

@@ -11,16 +11,24 @@ class CelestialBody {
   CelestialBody(SolarSystem *solar_system,
                 CelestialBody *parent,
                 float radius,
-                float rotational_speed,
-                float rotaional_phase,
-                float revolution_speed,
-                float revolution_phase,
                 float revolution_radius,
+                float rotational_speed,
+                float revolution_speed,
+                float rotaional_phase,
+                float revolution_phase,
                 const std::string &texture_path);
 
   void Update(float t);
 
   void Render(VkCommandBuffer cmd_buffer) const;
+
+  [[nodiscard]] glm::mat4 WorldTransform() const {
+    return world_transform_;
+  }
+
+  [[nodiscard]] glm::mat4 LocalTransform() const {
+    return local_transform_;
+  }
 
  private:
   SolarSystem *solar_system_;
@@ -34,4 +42,7 @@ class CelestialBody {
 
   std::unique_ptr<TextureImage> texture_;
   std::unique_ptr<Entity> entity_;
+
+  glm::mat4 world_transform_;
+  glm::mat4 local_transform_;
 };
