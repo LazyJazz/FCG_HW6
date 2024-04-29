@@ -1,6 +1,8 @@
 #include "solar_system.h"
+#include "spiral.h"
 
 int main() {
-  SolarSystem app;
+  SpiralSystem app;
+  //  SolarSystem app;
   app.Run();
 }
