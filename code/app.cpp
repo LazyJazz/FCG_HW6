@@ -10,7 +10,7 @@ Application::Application() {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   //  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  window_ = glfwCreateWindow(1280, 720, "FCG HW2", nullptr, nullptr);
+  window_ = glfwCreateWindow(1280, 720, "FCG HW5", nullptr, nullptr);
   if (!window_) {
     throw std::runtime_error("glfwCreateWindow failed.");
   }
