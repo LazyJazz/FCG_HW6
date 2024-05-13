@@ -19,30 +19,22 @@ vec3 GetVec3(int ix, int iy) {
     return vec3(GetFloat(i), GetFloat(i + 1), GetFloat(i + 2));
 }
 
+float factorial[5] = float[5](1.0, 1.0, 2.0, 6.0, 24.0);
+
 vec3 BezierInterpolationLinear(int ix, float v) {
-    vec3 p[5];
+    vec3 p = vec3(0.0);
     for (int i = 0; i < 5; i++) {
-        p[i] = GetVec3(ix, i);
+        p += GetVec3(ix, i) * factorial[4] / (factorial[i] * factorial[4 - i]) * pow(v, float(i)) * pow(1.0 - v, float(4 - i));
     }
-    for (int i = 1; i < 5; i++) {
-        for (int j = 0; j < 5 - i; j++) {
-            p[j] = mix(p[j], p[j + 1], v);
-        }
-    }
-    return p[0];
+    return p;
 }
 
 vec3 BezierInterpolation(float u, float v) {
-    vec3 p[5];
+    vec3 p = vec3(0.0);
     for (int i = 0; i < 5; i++) {
-        p[i] = BezierInterpolationLinear(i, v);
+        p += BezierInterpolationLinear(i, v) * factorial[4] / (factorial[i] * factorial[4 - i]) * pow(u, float(i)) * pow(1.0 - u, float(4 - i));
     }
-    for (int i = 1; i < 5; i++) {
-        for (int j = 0; j < 5 - i; j++) {
-            p[j] = mix(p[j], p[j + 1], u);
-        }
-    }
-    return p[0];
+    return p;
 }
 
 void main() {
