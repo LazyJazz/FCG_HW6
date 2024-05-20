@@ -4,6 +4,7 @@
 
 struct EntityUniformObject {
   glm::mat4 model_{};
+  glm::vec4 color_{1.0f};
 };
 
 class Entity {

@@ -11,6 +11,7 @@
     "glslang",
     "glm",
     "freetype",
-    "stb"
+    "stb",
+    "tinyobjloader"
   ]
 }

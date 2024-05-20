@@ -8,6 +8,7 @@ add_subdirectory(LongMarch)
 
 find_package(glm CONFIG REQUIRED)
 find_package(Freetype REQUIRED)
+find_package(tinyobjloader CONFIG REQUIRED)
 
 set(ASSETS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/assets/)
 

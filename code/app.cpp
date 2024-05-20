@@ -10,7 +10,7 @@ Application::Application() {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   //  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  window_ = glfwCreateWindow(1280, 720, "FCG HW5", nullptr, nullptr);
+  window_ = glfwCreateWindow(1280, 720, "FCG HW6", nullptr, nullptr);
   if (!window_) {
     throw std::runtime_error("glfwCreateWindow failed.");
   }
@@ -322,13 +322,15 @@ void Application::CreateDescriptorComponents() {
       "Failed to create entity sampler.")
 
   VkSampler sampler = entity_sampler_->Handle();
-  THROW_IF_FAILED(device_->CreateDescriptorSetLayout(
-                      {{0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1,
-                        VK_SHADER_STAGE_FRAGMENT_BIT, &sampler},
-                       {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1,
-                        VK_SHADER_STAGE_VERTEX_BIT, nullptr}},
-                      &entity_descriptor_set_layout_),
-                  "Failed to create entity descriptor set layout.")
+  THROW_IF_FAILED(
+      device_->CreateDescriptorSetLayout(
+          {{0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1,
+            VK_SHADER_STAGE_FRAGMENT_BIT, &sampler},
+           {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1,
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            nullptr}},
+          &entity_descriptor_set_layout_),
+      "Failed to create entity descriptor set layout.")
 
   vulkan::DescriptorPoolSize pool_size =
       (entity_descriptor_set_layout_->GetPoolSize() * 1024) *

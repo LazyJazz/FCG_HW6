@@ -1,9 +1,10 @@
 #include "bezier.h"
+#include "lighting.h"
 #include "snow.h"
 #include "solar_system.h"
 #include "spiral.h"
 
 int main() {
-  Bezier app;
+  Lighting app;
   app.Run();
 }
