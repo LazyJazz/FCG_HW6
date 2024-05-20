@@ -63,4 +63,6 @@ class Lighting : public Application {
 
   glm::vec3 camera_position_{0.0f, 0.0f, 2.0f};
   bool smoothed_model_{true};
+
+  glm::mat4 model_transform_{1.0f};
 };

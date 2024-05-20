@@ -49,6 +49,11 @@ Lighting::Lighting() {
     auto app = reinterpret_cast<Lighting *>(glfwGetWindowUserPointer(window));
     app->OnScroll(xoffset, yoffset);
   });
+
+  model_transform_ = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
+                                 glm::vec3(1.0f, 0.0f, 0.0f)) *
+                     glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
+                                 glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 void Lighting::OnInitImpl() {
@@ -79,14 +84,23 @@ void Lighting::OnUpdateImpl() {
   last_y = cur_y;
 
   const float mouse_speed = 0.001f;
-  if (glfwGetMouseButton(Window(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+  if (glfwGetMouseButton(Window(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS &&
+      glfwGetMouseButton(Window(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+    model_transform_ = glm::rotate(glm::mat4{1.0f}, mouse_speed * float(diff_x),
+                                   glm::vec3(0.0f, 1.0f, 0.0f)) *
+                       model_transform_;
+    model_transform_ = glm::rotate(glm::mat4{1.0f}, mouse_speed * float(diff_y),
+                                   glm::vec3(1.0f, 0.0f, 0.0f)) *
+                       model_transform_;
+  } else if (glfwGetMouseButton(Window(), GLFW_MOUSE_BUTTON_LEFT) ==
+             GLFW_PRESS) {
     camera_theta_ += -mouse_speed * diff_x;
     camera_phi_ += -mouse_speed * diff_y;
     camera_phi_ =
         glm::clamp(camera_phi_, -glm::half_pi<float>(), glm::half_pi<float>());
     camera_theta_ = glm::mod(camera_theta_, glm::two_pi<float>());
-  }
-  if (glfwGetMouseButton(Window(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+  } else if (glfwGetMouseButton(Window(), GLFW_MOUSE_BUTTON_RIGHT) ==
+             GLFW_PRESS) {
     light_theta_ -= mouse_speed * diff_x;
     light_phi_ -= mouse_speed * diff_y;
     light_phi_ =
@@ -139,10 +153,7 @@ void Lighting::OnUpdateImpl() {
   global_uniform_buffer_->At(0) = global_uniform_object_;
 
   EntityUniformObject entity_info = EntityUniformObject{
-      glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
-                  glm::vec3(1.0f, 0.0f, 0.0f)) *
-          glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
-                      glm::vec3(0.0f, 1.0f, 0.0f)),
+      model_transform_,
       glm::vec4{hsv2rgb(glm::vec3{light_h_, 0.7f, 1.0f}), 1.0f}};
 
   entity_->SetEntityInfo(entity_info);
@@ -345,6 +356,12 @@ void Lighting::OnKeyEvent(int key, int scancode, int action, int mods) {
     switch (key) {
       case GLFW_KEY_TAB:
         smoothed_model_ = !smoothed_model_;
+        break;
+      case GLFW_KEY_PAGE_UP:
+        model_transform_ *= glm::scale(glm::mat4{1.0f}, glm::vec3{1.1f});
+        break;
+      case GLFW_KEY_PAGE_DOWN:
+        model_transform_ *= glm::scale(glm::mat4{1.0f}, glm::vec3{1.0f / 1.1f});
         break;
     }
   }
